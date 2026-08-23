@@ -1,5 +1,6 @@
 const API_BASE_URL = "https://server.speedcubinghrvatska.hr";
 const CATEGORY_NEWS = "vijesti";
+const CATEGORY_INFO = "informacije";
 const CATEGORY_ABOUT = "category-gen-info";
 
 function articleBasePath() {
@@ -193,46 +194,48 @@ function renderArticleCards(target, articles, options = {}) {
 	});
 }
 
+async function loadHomepageArticles(target, categorySlug, options = {}) {
+	if (!target) {
+		return;
+	}
+
+	try {
+		const data = await fetchJson(
+			articlesUrl(categorySlug, {
+				pageSize: options.pageSize || 4,
+				sort: options.sort || ["Datum:desc", "publishedAt:desc"],
+			}),
+		);
+		const articles = (data.data || []).map(normalizeArticle);
+		renderArticleCards(target, articles, options);
+	} catch (error) {
+		// Keep the existing skeleton visible while the remote feed is unavailable.
+	}
+}
+
 async function fetchData() {
 	const latestNews = document.getElementById("latestNewsGrid");
+	const latestInfo = document.getElementById("latestInfoGrid");
 	const aboutInfo = document.getElementById("aboutInfoGrid");
 
-	if (latestNews) {
-		try {
-			const data = await fetchJson(
-				articlesUrl(CATEGORY_NEWS, {
-					pageSize: 4,
-					sort: ["Datum:desc", "publishedAt:desc"],
-				}),
-			);
-			const articles = (data.data || []).map(normalizeArticle);
-			renderArticleCards(latestNews, articles, {
-				kicker: "Vijesti",
-				showMeta: true,
-				emptyText: "Trenutno nema vijesti za prikaz.",
-			});
-		} catch (error) {
-			// Keep the existing skeleton visible while the remote feed is unavailable.
-		}
-	}
-
-	if (aboutInfo) {
-		try {
-			const data = await fetchJson(
-				articlesUrl(CATEGORY_ABOUT, {
-					pageSize: 4,
-					sort: ["publishedAt:desc"],
-				}),
-			);
-			const articles = (data.data || []).map(normalizeArticle);
-			renderArticleCards(aboutInfo, articles, {
-				kicker: "O udruzi",
-				emptyText: "Trenutno nema objava za prikaz.",
-			});
-		} catch (error) {
-			// Keep the existing skeleton visible while the remote feed is unavailable.
-		}
-	}
+	await Promise.all([
+		loadHomepageArticles(latestNews, CATEGORY_NEWS, {
+			kicker: "Vijesti",
+			showMeta: true,
+			emptyText: "Trenutno nema vijesti za prikaz.",
+		}),
+		loadHomepageArticles(latestInfo, CATEGORY_INFO, {
+			kicker: "Informacije",
+			showMeta: true,
+			emptyText: "Trenutno nema informacija za prikaz.",
+		}),
+		loadHomepageArticles(aboutInfo, CATEGORY_ABOUT, {
+			pageSize: 4,
+			sort: ["publishedAt:desc"],
+			kicker: "O udruzi",
+			emptyText: "Trenutno nema objava za prikaz.",
+		}),
+	]);
 }
 
 function escapeHtml(value) {
@@ -706,6 +709,16 @@ function renderArticle(shell, article) {
 	const title = document.createElement("h1");
 	title.textContent = article.title;
 
+	const metaText = [formatDate(article.date || article.publishedAt), article.place]
+		.filter(Boolean)
+		.join(" · ");
+	const meta = metaText ? document.createElement("p") : null;
+
+	if (meta) {
+		meta.className = "article-meta";
+		meta.textContent = metaText;
+	}
+
 	const description = document.createElement("p");
 	description.className = "article-description";
 	description.textContent = article.description;
@@ -750,11 +763,11 @@ function renderArticle(shell, article) {
 	}
 
 	if (article.description) {
-		shell.append(kicker, title, description, content);
+		shell.append(kicker, title, ...(meta ? [meta] : []), description, content);
 		return;
 	}
 
-	shell.append(kicker, title, content);
+	shell.append(kicker, title, ...(meta ? [meta] : []), content);
 }
 
 function compareArticles(a, b, sortOrder) {
@@ -809,17 +822,20 @@ function articleMatchesFilters(article, filters) {
 	return true;
 }
 
-function updateArchiveCount(countElement, count) {
+function updateArchiveCount(countElement, count, labels = {}) {
 	if (!countElement) {
 		return;
 	}
 
+	const singular = labels.singular || "vijest";
+	const plural = labels.plural || "vijesti";
+
 	if (count === 1) {
-		countElement.textContent = "1 vijest";
+		countElement.textContent = `1 ${singular}`;
 		return;
 	}
 
-	countElement.textContent = `${count} vijesti`;
+	countElement.textContent = `${count} ${plural}`;
 }
 
 function populatePlaceFilter(selectElement, articles) {
@@ -839,15 +855,15 @@ function populatePlaceFilter(selectElement, articles) {
 	});
 }
 
-async function initNewsArchive() {
-	const grid = document.getElementById("newsArchiveGrid");
-	const form = document.getElementById("newsFilters");
-	const countElement = document.getElementById("newsArchiveCount");
-	const searchInput = document.getElementById("newsSearch");
-	const placeSelect = document.getElementById("placeFilter");
-	const dateFromInput = document.getElementById("dateFromFilter");
-	const dateToInput = document.getElementById("dateToFilter");
-	const sortSelect = document.getElementById("sortFilter");
+async function initArticleArchive(config) {
+	const grid = document.getElementById(config.gridId);
+	const form = document.getElementById(config.formId);
+	const countElement = document.getElementById(config.countId);
+	const searchInput = document.getElementById(config.searchId);
+	const placeSelect = document.getElementById(config.placeId);
+	const dateFromInput = document.getElementById(config.dateFromId);
+	const dateToInput = document.getElementById(config.dateToId);
+	const sortSelect = document.getElementById(config.sortId);
 
 	if (!grid || !form) {
 		return;
@@ -867,19 +883,20 @@ async function initNewsArchive() {
 			.filter((article) => articleMatchesFilters(article, filters))
 			.sort((a, b) => compareArticles(a, b, filters.sort));
 
-		updateArchiveCount(countElement, filtered.length);
+		updateArchiveCount(countElement, filtered.length, config.countLabels);
 		renderArticleCards(grid, filtered, {
-			kicker: "Vijesti",
-			showMeta: true,
-			emptyText: "Nema vijesti koje odgovaraju filtrima.",
+			kicker: config.kicker,
+			showMeta: Boolean(config.showMeta),
+			emptyText: config.emptyText,
 		});
 	};
 
 	try {
 		const data = await fetchJson(
-			articlesUrl(CATEGORY_NEWS, {
-				pageSize: 100,
-				sort: ["Datum:desc", "publishedAt:desc"],
+			articlesUrl(config.categorySlug, {
+				pageSize: config.pageSize || 100,
+				sort:
+					config.sort || ["Datum:desc", "publishedAt:desc"],
 				includeBlocks: true,
 			}),
 		);
@@ -898,6 +915,48 @@ async function initNewsArchive() {
 	sortSelect.addEventListener("change", renderFilteredArticles);
 	form.addEventListener("reset", () => {
 		window.setTimeout(renderFilteredArticles, 0);
+	});
+}
+
+async function initNewsArchive() {
+	return initArticleArchive({
+		gridId: "newsArchiveGrid",
+		formId: "newsFilters",
+		countId: "newsArchiveCount",
+		searchId: "newsSearch",
+		placeId: "placeFilter",
+		dateFromId: "dateFromFilter",
+		dateToId: "dateToFilter",
+		sortId: "sortFilter",
+		categorySlug: CATEGORY_NEWS,
+		kicker: "Vijesti",
+		showMeta: true,
+		emptyText: "Nema vijesti koje odgovaraju filtrima.",
+		countLabels: {
+			singular: "vijest",
+			plural: "vijesti",
+		},
+	});
+}
+
+async function initInfoArchive() {
+	return initArticleArchive({
+		gridId: "infoArchiveGrid",
+		formId: "infoFilters",
+		countId: "infoArchiveCount",
+		searchId: "infoSearch",
+		placeId: "infoPlaceFilter",
+		dateFromId: "infoDateFromFilter",
+		dateToId: "infoDateToFilter",
+		sortId: "infoSortFilter",
+		categorySlug: CATEGORY_INFO,
+		kicker: "Informacije",
+		showMeta: true,
+		emptyText: "Nema informacija koje odgovaraju filtrima.",
+		countLabels: {
+			singular: "informacija",
+			plural: "informacije",
+		},
 	});
 }
 
