@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="hr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Lekcije speedcubinga za učenje i predavanja: tekst, ilustracije, animirani algoritmi i podrška za pametnu kocku."
+    />
+    <title>3×3×3 – Lekcije | Speedcubing Hrvatska</title>
+    <link href="../../css/toplevel.css" rel="stylesheet" />
+    <link href="../../css/text.css" rel="stylesheet" />
+    <link href="../../css/lessons.css" rel="stylesheet" />
+    <link rel="icon" href="../../images/Logo-kvadrat.svg" />
+  </head>
+  <body class="lesson-page">
+    <a class="skip-link" href="#main">Preskoči na sadržaj</a>
+    <header class="site-header">
+      <nav class="site-nav container" aria-label="Primarna navigacija">
+        <a class="brand" href="../../index.html" aria-label="Speedcubing Hrvatska početna">
+          <img src="../../images/logo-bijeli.jpg" class="brand-logo" alt="Speedcubing Hrvatska" />
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Otvori navigaciju"
+          aria-expanded="false"
+          aria-controls="primary-navigation"
+          data-nav-toggle
+        >
+          <span class="nav-toggle-bars" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="nav-links" id="primary-navigation" data-nav-links>
+          <a href="../" aria-current="page">Učenje</a>
+          <a href="../../pages/vijesti/">Vijesti</a>
+          <a href="../../pages/informacije/">Informacije</a>
+          <a href="../../pages/badges.html">Bedževi</a>
+          <a href="https://lumer-shop.eu/product-category/speedcubing-hrvatska/">Merch</a>
+          <a href="../../pages/dokumenti.html">Službeni dokumenti</a>
+        </div>
+      </nav>
+    </header>
+    <main id="main" class="lesson-main">
+      <div class="container">
+        <p id="demo-indicator" class="lesson-demo-notice" hidden>
+          Primjer sadržaja (<code>?demo=1</code>) — nije preuzet iz Strapi CMS-a.
+        </p>
+        <p id="error-area" class="lesson-error" role="alert" hidden></p>
+        <div id="loading" class="lesson-loading" role="status">Učitavanje lekcija…</div>
+        <section id="lesson-index" hidden>
+          <a class="lesson-back" href="../ucenje/">← Discipline</a>
+          <div class="lesson-hero">
+            <p class="eyebrow">Učenje / 3×3×3</p>
+            <h1>3×3×3</h1>
+            <p>Odaberi lekciju.</p>
+          </div>
+          <div class="lesson-list-header">
+            <h2>Lekcije</h2>
+          </div>
+          <div id="lesson-list" class="lesson-list"></div>
+          <p id="empty-lessons" class="lesson-empty" hidden>
+            Trenutno nema objavljenih lekcija za ovu disciplinu.
+          </p>
+        </section>
+        <article id="lesson-view" data-view="scroll" hidden>
+          <div class="lesson-stage-header">
+            <div class="lesson-stage-title">
+              <span>Prezentacija</span>
+              <strong id="stage-lesson-title"></strong>
+            </div>
+            <div class="lesson-stage-actions">
+              <button
+                type="button"
+                id="fullscreen-toggle"
+                class="lesson-button"
+                aria-label="Uključi cijeli zaslon"
+              >
+                Cijeli zaslon
+              </button>
+              <button type="button" id="exit-presentation" class="lesson-button">Zatvori ✕</button>
+            </div>
+          </div>
+          <a id="back-to-lessons" class="lesson-back" href="./" data-lesson-link>← Lekcije</a>
+          <header id="lesson-heading" class="lesson-heading">
+            <p class="eyebrow">3×3×3 / Lekcija</p>
+            <h1 id="lesson-title"></h1>
+            <p id="lesson-description"></p>
+          </header>
+          <div class="lesson-toolbar" aria-label="Postavke lekcije">
+            <div class="lesson-toolbar-group">
+              <span class="lesson-toolbar-label">Prikaz</span>
+              <div class="lesson-segment" role="group" aria-label="Način prikaza">
+                <button type="button" id="scroll-mode" aria-pressed="true">Čitanje</button>
+                <button type="button" id="slides-mode" aria-pressed="false">Prezentacija</button>
+              </div>
+            </div>
+            <div id="cube-mode-controls" class="lesson-toolbar-group" hidden>
+              <span class="lesson-toolbar-label">Kocka</span>
+              <div class="lesson-segment" role="group" aria-label="Način rada kocke">
+                <button type="button" id="animated-mode" aria-pressed="true">Animacija</button>
+                <button type="button" id="live-mode" aria-pressed="false">Uživo</button>
+              </div>
+            </div>
+            <div id="device-controls" class="lesson-device-controls" hidden>
+              <button type="button" id="connect-cube" class="lesson-button lesson-button-primary">
+                Poveži kocku
+              </button>
+              <button
+                type="button"
+                id="sync-cube"
+                class="lesson-button"
+                title="Fizička kocka mora biti složena prije sinkronizacije"
+              >
+                Sinkroniziraj složenu
+              </button>
+              <button type="button" id="disconnect-cube" class="lesson-button lesson-button-muted">
+                Odspoji
+              </button>
+            </div>
+          </div>
+          <div id="device-status" class="lesson-device-status" role="status" hidden>
+            <span id="bluetooth-status"></span>
+            <span id="bluetooth-hint"></span>
+          </div>
+          <div id="lesson-body" class="lesson-body"></div>
+          <p id="empty-sections" class="lesson-empty" hidden>Ova lekcija još nema sadržaj.</p>
+          <nav
+            id="slide-controls"
+            class="lesson-slide-controls"
+            aria-label="Navigacija prezentacije"
+            hidden
+          >
+            <button type="button" id="previous-slide" class="lesson-button">← Prethodno</button>
+            <span id="slide-progress" aria-live="polite"></span>
+            <button type="button" id="next-slide" class="lesson-button lesson-button-primary">
+              Sljedeće →
+            </button>
+          </nav>
+          <nav class="lesson-next" aria-label="Susjedne lekcije">
+            <a id="previous-lesson" href="./" data-lesson-link hidden></a>
+            <a id="next-lesson" href="./" data-lesson-link hidden></a>
+          </nav>
+        </article>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-meta">
+          <p><strong>Udruga Speedcubing Hrvatska</strong></p>
+          <p>Ljubijska 42B, 10000 Zagreb, Hrvatska</p>
+          <p>OIB: 43786344473</p>
+        </div>
+        <a class="footer-contact" href="mailto:info@speedcubinghrvatska.hr">
+          info@speedcubinghrvatska.hr
+        </a>
+        <div class="social-links" aria-label="Društvene mreže">
+          <a href="https://www.facebook.com/speedcubinghrvatska" target="_blank" rel="noreferrer">
+            Facebook
+          </a>
+          <a href="https://www.instagram.com/speedcubinghrvatska" target="_blank" rel="noreferrer">
+            Instagram
+          </a>
+        </div>
+      </div>
+    </footer>
+    <script src="../../js/navbar.js"></script>
+    <script type="module" src="../../js/lessons/main.js"></script>
+  </body>
+</html>

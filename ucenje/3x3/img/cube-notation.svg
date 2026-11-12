@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 350" role="img" aria-labelledby="title desc">
+  <title id="title">Osnovne strane 3x3 kocke</title>
+  <desc id="desc">Gornja U, prednja F i desna R strana Rubikove kocke</desc>
+  <rect width="500" height="350" rx="22" fill="#eef1fb"/>
+  <g stroke="#28334c" stroke-width="5" stroke-linejoin="round">
+    <polygon points="250,55 385,119 250,184 115,119" fill="#f5f5ef"/>
+    <polygon points="115,119 250,184 250,313 115,248" fill="#31b46d"/>
+    <polygon points="250,184 385,119 385,248 250,313" fill="#e94555"/>
+    <path d="M160 98 L295 164 M205 77 L340 141 M160 140 L295 75 M205 162 L340 97" fill="none" stroke-width="2" opacity=".6"/>
+    <path d="M115 162 L250 227 M115 205 L250 270 M160 141 L160 270 M205 163 L205 292" fill="none" stroke-width="2" opacity=".6"/>
+    <path d="M250 227 L385 162 M250 270 L385 205 M295 162 L295 291 M340 140 L340 269" fill="none" stroke-width="2" opacity=".6"/>
+  </g>
+  <g font-family="system-ui, sans-serif" font-weight="800" font-size="28" text-anchor="middle" fill="#1e2b43">
+    <text x="250" y="130">U</text><text x="184" y="233">F</text><text x="317" y="233" fill="white">R</text>
+  </g>
+</svg>
