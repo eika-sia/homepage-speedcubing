@@ -111,9 +111,18 @@ export class CubeManager {
     this.TwistyPlayer = TwistyPlayer;
   }
 
+  // A live player must never survive as an algorithm player. Remove it even
+  // when its slide is hidden; hidden slides aren't visited by mountSections().
+  discardPlayer(entry) {
+    entry.player?.pause();
+    entry.player = null;
+    entry.renderedMode = null;
+    entry.host.replaceChildren();
+  }
+
   clearSections() {
     for (const entry of this.players.values()) {
-      entry.player?.pause();
+      this.discardPlayer(entry);
       this.resizeObserver?.unobserve(entry.host);
       this.intersectionObserver?.unobserve(entry.host);
     }
@@ -122,7 +131,14 @@ export class CubeManager {
 
   addSection(host, section) {
     if (!this.TwistyPlayer) throw new Error("cubing.js nije dostupan.");
-    const entry = { host, section, player: null, renderedMode: null };
+    // Capture immutable CMS algorithms. Bluetooth moves only affect liveMoves.
+    const entry = {
+      host,
+      demoAlg: algText(section.alg),
+      demoSetupAlg: algText(section.setupAlg),
+      player: null,
+      renderedMode: null,
+    };
     this.players.set(host, entry);
     // Observing the panel (not the player) avoids feedback loops.
     if (typeof Element !== "undefined" && host instanceof Element) {
@@ -158,8 +174,8 @@ export class CubeManager {
       hintFacelets: "none",
       viewerLink: "none",
       controlPanel: "bottom-row",
-      experimentalSetupAlg: live ? "" : algText(entry.section.setupAlg),
-      alg: live ? this.liveMoves.join(" ") : algText(entry.section.alg),
+      experimentalSetupAlg: live ? "" : entry.demoSetupAlg,
+      alg: live ? this.liveMoves.join(" ") : entry.demoAlg,
     });
     // The panel is already connected and visible here. Configure the player
     // before insertion so its internal canvas sees the final size at startup.
@@ -176,7 +192,12 @@ export class CubeManager {
 
   setMode(mode) {
     if (mode !== "animated" && mode !== "live") return;
-    this.mode = mode;
+    if (mode !== this.mode) {
+      this.mode = mode;
+      // Important: dispose *all* old viewers, including hidden slides.
+      // Recreate visible ones from their original CMS algorithm or liveMoves.
+      for (const entry of this.players.values()) this.discardPlayer(entry);
+    }
     this.mountSections();
   }
 
@@ -186,19 +207,26 @@ export class CubeManager {
     if (this.mode !== "live") return;
     for (const entry of this.players.values()) {
       if (!entry.player || entry.renderedMode !== "live") continue;
+      // No need to update a player belonging to a hidden presentation slide.
+      // When shown again, it will be reconstructed from the live move history.
+      if (!this.isVisible(entry)) {
+        this.discardPlayer(entry);
+        continue;
+      }
       try {
         entry.player.experimentalAddMove(move, { cancel: true });
       } catch (error) {
         console.warn("Live cube append failed", error);
+        this.discardPlayer(entry);
         if (this.isVisible(entry)) this.mountEntry(entry);
-        else entry.renderedMode = null;
       }
     }
   }
 
   syncSolved() {
     this.liveMoves = [];
-    for (const entry of this.players.values()) entry.renderedMode = null;
-    if (this.mode === "live") this.mountSections();
+    if (this.mode !== "live") return; // Never reset authored animations.
+    for (const entry of this.players.values()) this.discardPlayer(entry);
+    this.mountSections();
   }
 }

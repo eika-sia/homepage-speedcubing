@@ -75,7 +75,12 @@ function refreshModes() {
 function setView(view) {
   if (!(["scroll", "slides"].includes(view)) || view === state.view) return;
   state.view = view;
-  if (view === "scroll" && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (view === "scroll") {
+    // Reading is for replaying the authored lesson algorithms. Keep the
+    // Bluetooth connection and move history; only change the displayed mode.
+    state.cubeMode = "animated";
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
   refreshModes();
 }
 
@@ -175,6 +180,9 @@ async function renderLesson(slug, lessons, request) {
 async function showRoute() {
   const request = ++routeRequest;
   if (state.view === "slides") setView("scroll");
+  // Opening another lesson always starts with the authored demonstrations.
+  // The shared Bluetooth connection and its physical move history remain alive.
+  state.cubeMode = "animated";
   showError("");
   $("loading").hidden = false;
   $("lesson-view").hidden = true;
